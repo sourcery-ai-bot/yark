@@ -24,9 +24,7 @@ class Video:
         video.title = Element.new(video, entry["title"])
         video.description = Element.new(video, entry["description"])
         video.views = Element.new(video, entry["view_count"])
-        video.likes = Element.new(
-            video, entry["like_count"] if "like_count" in entry else None
-        )
+        video.likes = Element.new(video, entry.get("like_count", None))
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
         video.deleted = Element.new(video, False)
         video.notes = []
@@ -43,9 +41,7 @@ class Video:
         self.title.update("title", entry["title"])
         self.description.update("description", entry["description"])
         self.views.update("view count", entry["view_count"])
-        self.likes.update(
-            "like count", entry["like_count"] if "like_count" in entry else None
-        )
+        self.likes.update("like count", entry.get("like_count", None))
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
         self.deleted.update("undeleted", False)
 
@@ -54,13 +50,7 @@ class Video:
 
     def downloaded(self, ldir: list) -> bool:
         """Checks if this video has been downloaded"""
-        # Try to find id in videos
-        for file in ldir:
-            if fnmatch(file, f"{self.id}.mp4"):
-                return True
-
-        # No matches
-        return False
+        return any(fnmatch(file, f"{self.id}.mp4") for file in ldir)
 
     def updated(self) -> bool:
         """Checks if this video's title or description or deleted status have been ever updated"""
@@ -162,13 +152,13 @@ def _magnitude(count: int = None) -> str:
         return str(count)
     elif count < 1000000:
         value = "{:.1f}".format(float(count) / 1000.0)
-        return value + "k"
+        return f"{value}k"
     elif count < 1000000000:
         value = "{:.1f}".format(float(count) / 1000000.0)
-        return value + "m"
+        return f"{value}m"
     else:
         value = "{:.1f}".format(float(count) / 1000000000.0)
-        return value + "b"
+        return f"{value}b"
 
 
 class Element:

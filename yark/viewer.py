@@ -93,11 +93,10 @@ def video(name, kind, id):
                 likes_data=likes_data,
             )
 
-        # Add new note
         elif request.method == "POST":
             # Parse json
             new = request.get_json()
-            if not "title" in new:
+            if "title" not in new:
                 return "Invalid schema", 400
 
             # Create note
@@ -113,11 +112,14 @@ def video(name, kind, id):
             # Return
             return note._to_dict(), 200
 
-        # Update existing note
         elif request.method == "PATCH":
             # Parse json
             update = request.get_json()
-            if not "id" in update or (not "title" in update and not "body" in update):
+            if (
+                "id" not in update
+                or "title" not in update
+                and "body" not in update
+            ):
                 return "Invalid schema", 400
 
             # Find note
@@ -136,39 +138,30 @@ def video(name, kind, id):
             # Return
             return "Updated", 200
 
-        # Delete existing note
         elif request.method == "DELETE":
             # Parse json
             delete = request.get_json()
-            if not "id" in delete:
+            if "id" not in delete:
                 return "Invalid schema", 400
 
-            # Filter out note with id and save
-            filtered_notes = []
-            for note in video.notes:
-                if note.id != delete["id"]:
-                    filtered_notes.append(note)
+            filtered_notes = [note for note in video.notes if note.id != delete["id"]]
             video.notes = filtered_notes
             video.channel.commit()
 
             # Return
             return "Deleted", 200
 
-    # Archive not found
     except ArchiveNotFoundException:
         return redirect(
             url_for("routes.index", error="Couldn't open channel's archive")
         )
 
-    # Video not found
     except VideoNotFoundException:
         return redirect(url_for("routes.index", error="Couldn't find video in archive"))
 
-    # Timestamp for note was invalid
     except TimestampException:
         return "Invalid timestamp", 400
 
-    # Unknown error
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
@@ -205,7 +198,7 @@ def _decode_timestamp(input: str) -> int:
     """Parses timestamp into seconds or raises `TimestampException`"""
     # Check existence
     input = input.strip()
-    if input == "":
+    if not input:
         raise TimestampException("No input provided")
 
     # Split colons
@@ -258,7 +251,7 @@ def _encode_timestamp(timestamp: int) -> str:
         timestamp = int((minutes - int(minutes)) * 60)
 
     # Seconds
-    if len(parts) == 0:
+    if not parts:
         parts.append("00")
     parts.append(str(timestamp).rjust(2, "0"))
 

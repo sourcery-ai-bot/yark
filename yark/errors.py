@@ -35,8 +35,8 @@ class TimestampException(Exception):
 def _err_msg(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (
-        msg
-        if not report_msg
-        else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+        f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+        if report_msg
+        else msg
     )
     print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)

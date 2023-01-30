@@ -32,15 +32,15 @@ class Reporter:
 
         # Added
         for video in self.added:
-            print(Fore.GREEN + f"  • {video}")
+            print(f"{Fore.GREEN}  • {video}")
 
         # Deleted
         for video in self.deleted:
-            print(Fore.RED + f"  • {video}")
+            print(f"{Fore.RED}  • {video}")
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
-            print(Style.DIM + f"  • Nothing was added or deleted")
+            print(f"{Style.DIM}  • Nothing was added or deleted")
 
         # Watermark
         print(_watermark())
@@ -70,15 +70,13 @@ class Reporter:
 
             # Lambdas for easy buffer addition for next block
             buf = []
-            maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
+            maybe_capitalize = lambda word: word if buf else word.capitalize()
             add_buf = lambda name, change, colour: buf.append(
                 colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
             )
 
             # Figure out how many changes have happened in each category and format them together
-            change_deleted = sum(
-                1 for value in video.deleted.inner.values() if value == True
-            )
+            change_deleted = sum(value == True for value in video.deleted.inner.values())
             if change_deleted != 0:
                 add_buf("deleted", change_deleted, Fore.RED)
             change_description = len(video.description.inner) - 1
@@ -132,7 +130,7 @@ class Reporter:
                 print(buf)
 
         # Print out those with nothing of note at the end
-        if len(not_of_note) != 0:
+        if not_of_note:
             not_of_note = "/".join(not_of_note)
             print(f"No interesting {not_of_note} found")
 
@@ -143,4 +141,4 @@ class Reporter:
 def _watermark() -> str:
     """Returns a new watermark with a Yark timestamp"""
     date = datetime.datetime.utcnow().isoformat()
-    return Style.RESET_ALL + f"Yark – {date}"
+    return f"{Style.RESET_ALL}Yark – {date}"

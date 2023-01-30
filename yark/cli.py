@@ -45,7 +45,6 @@ def _cli():
         print(HELP)
         sys.exit(0)
 
-    # Create new
     elif args[0] == "new":
         # More help
         if len(args) == 2 and args[1] == "--help":
@@ -59,7 +58,6 @@ def _cli():
         # Create channel
         Channel.new(args[1], args[2])
 
-    # Refresh
     elif args[0] == "refresh":
         # More help
         if len(args) == 2 and args[1] == "--help":
@@ -138,7 +136,6 @@ def _cli():
         except ArchiveNotFoundException:
             _err_archive_not_found()
 
-    # View
     elif args[0] == "view":
 
         def launch():
@@ -164,13 +161,11 @@ def _cli():
             webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}/videos")
             launch()
 
-        # Start on channel finder
         else:
             print("Starting viewer..")
-            webbrowser.open(f"http://127.0.0.1:7667/")
+            webbrowser.open("http://127.0.0.1:7667/")
             launch()
 
-    # Report
     elif args[0] == "report":
         # Bad arguments
         if len(args) < 2:
@@ -180,7 +175,6 @@ def _cli():
         channel = Channel.load(args[1])
         channel.reporter.interesting_changes()
 
-    # Unknown
     else:
         print(HELP, file=sys.stderr)
         _err_msg(f"\nError: Unknown command '{args[0]}' provided!", True)
@@ -196,7 +190,7 @@ def _pypi_version():
 
     def decode_version(version: str) -> tuple:
         """Decodes stringified versioning into a tuple"""
-        return tuple([int(v) for v in version.split(".")[:2]])
+        return tuple(int(v) for v in version.split(".")[:2])
 
     # Generate versions
     our_major, our_minor = decode_version(version("yark"))
@@ -205,13 +199,11 @@ def _pypi_version():
     # Compare versions
     if their_major > our_major:
         print(
-            Fore.YELLOW
-            + f"There's a major update for Yark ready to download! Run `pip3 install --upgrade yark`"
-            + Fore.RESET
+            f"{Fore.YELLOW}There's a major update for Yark ready to download! Run `pip3 install --upgrade yark`{Fore.RESET}"
         )
     elif their_minor > our_minor:
         print(
-            f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
+            "There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
 

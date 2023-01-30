@@ -65,13 +65,12 @@ class VideoLogger:
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
             print(
-                Style.DIM + f"  • Downloading {id}, at {percent}.." + Style.NORMAL,
+                f"{Style.DIM}  • Downloading {id}, at {percent}..{Style.NORMAL}",
                 end="\r",
             )
 
-        # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}              " + Style.NORMAL)
+            print(f"{Style.DIM}  • Downloaded {id}              {Style.NORMAL}")
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -155,11 +154,7 @@ class Channel:
 
                     # Print retrying message
                     if retrying:
-                        print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )
+                        print(f"{Style.DIM}  • Retrying metadata download..{Style.RESET_ALL}")
 
         # Uncomment for saving big dumps for testing
         # with open("demo/dump.json", "w+") as file:
@@ -242,47 +237,38 @@ class Channel:
                             ydl.download(urls)
                             break
 
-                        # Special handling for private/deleted videos which are archived, if not we raise again
                         except Exception as exception:
-                            # Video is privated or deleted
                             if (
-                                "Private video" in exception.msg
-                                or "This video has been removed by the uploader"
-                                in exception.msg
+                                "Private video" not in exception.msg
+                                and "This video has been removed by the uploader"
+                                not in exception.msg
                             ):
-                                # Get list of downloaded videos
-                                ldir = os.listdir(self.path / "videos")
+                                raise exception
+
+                            # Get list of downloaded videos
+                            ldir = os.listdir(self.path / "videos")
 
                                 # Find fist undownloaded video which will be the privated one
-                                for ind, video in enumerate(not_downloaded):
-                                    if not video.downloaded(ldir):
+                            for ind, video in enumerate(not_downloaded):
+                                if not video.downloaded(ldir):
                                         # Tell the user we're skipping over it
-                                        print(
-                                            Style.DIM
-                                            + f"  • Skipping {video.id} (deleted)"
-                                            + Style.NORMAL,
-                                        )
+                                    print(f"{Style.DIM}  • Skipping {video.id} (deleted){Style.NORMAL}")
 
-                                        # If this is a new occurrence then set it & report
-                                        # This will only happen if its deleted after getting metadata, like in a dry run
-                                        if video.deleted.current() == False:
-                                            self.reporter.deleted.append(video)
-                                            video.deleted.update(None, True)
+                                    # If this is a new occurrence then set it & report
+                                    # This will only happen if its deleted after getting metadata, like in a dry run
+                                    if video.deleted.current() == False:
+                                        self.reporter.deleted.append(video)
+                                        video.deleted.update(None, True)
 
-                                        # Set curated videos to skip over this one
-                                        not_downloaded = not_downloaded[ind + 1 :]
+                                    # Set curated videos to skip over this one
+                                    not_downloaded = not_downloaded[ind + 1 :]
 
-                                        # Break and start downloading again
-                                        break
-
-                            # Nevermind, normal exception
-                            else:
-                                raise exception
+                                    # Break and start downloading again
+                                    break
 
                     # Stop if we've got them all
                     break
 
-                # Report error and retry/stop
                 except Exception as exception:
                     # Get around carriage return
                     if i == 0:
@@ -397,7 +383,7 @@ class Channel:
                 deletion_bucket.append(filename)
 
         # Print and delete if there are part files present
-        if len(deletion_bucket) != 0:
+        if deletion_bucket:
             print("Cleaning out previous temporary files..")
             for filename in deletion_bucket:
                 os.remove(f"{video_path}/{filename}")
@@ -518,18 +504,18 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     # Default message
     msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"
 
-    # Types of errors
-    ERRORS = [
-        "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
-        "500",
-        "Got error: The read operation timed out",
-        "No such file or directory",
-        "HTTP Erorr 404: Not Found",
-        "<urlopen error timed out>",
-    ]
-
     # Download errors
     if type(exception) == DownloadError:
+        # Types of errors
+        ERRORS = [
+            "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+            "500",
+            "Got error: The read operation timed out",
+            "No such file or directory",
+            "HTTP Erorr 404: Not Found",
+            "<urlopen error timed out>",
+        ]
+
         # Server connection
         if ERRORS[0] in exception.msg:
             msg = "Issue connecting with YouTube's servers"
@@ -556,10 +542,7 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
-    print(
-        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
-        file=sys.stderr,
-    )
+    print(f"{Fore.YELLOW}  • {msg}{suffix.ljust(40)}{Fore.RESET}", file=sys.stderr)
 
     # Wait if retrying, exit if failed
     if retrying:
